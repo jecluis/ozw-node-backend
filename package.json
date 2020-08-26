@@ -1,0 +1,35 @@
+{
+  "name": "ozw-backend",
+  "version": "1.0.0",
+  "description": "backend to interface with the ozw-mqtt-gateway, providing alternative protocols aside from mqtt",
+  "main": "ozw-backend.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jecluis/ozw-node-backend.git"
+  },
+  "keywords": [
+    "openzwave",
+    "mqtt",
+    "nodejs",
+    "typescript"
+  ],
+  "author": "Joao Eduardo Luis",
+  "license": "EUPL-1.2",
+  "bugs": {
+    "url": "https://github.com/jecluis/ozw-node-backend/issues"
+  },
+  "homepage": "https://github.com/jecluis/ozw-node-backend#readme",
+  "dependencies": {
+    "@types/express": "^4.17.7",
+    "@types/node": "^14.6.0",
+    "express": "^4.17.1",
+    "mqtt": "^4.2.0",
+    "nodemon": "^2.0.4",
+    "ts-node": "^9.0.0",
+    "tslog": "^2.7.1",
+    "typescript": "^4.0.2"
+  }
+}
