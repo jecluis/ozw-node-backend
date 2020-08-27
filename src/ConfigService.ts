@@ -26,7 +26,7 @@ export interface HTTPServerConfigItem {
 }
 
 
-export interface Config {
+export interface ConfigItem {
 	mqtt: MQTTConfigItem;
 	server: HTTPServerConfigItem;
 }
@@ -73,13 +73,13 @@ export class ConfigService {
 		if (raw === "") {
 			return -ENODATA;
 		}
-		let loaded_config: Config = JSON.parse(raw);
+		let loaded_config: ConfigItem = JSON.parse(raw);
 		this.config = {...this.config, ...loaded_config};
 		return 0;
 	}
 
 	// default configuration
-	private config: Config = {
+	private config: ConfigItem = {
 		mqtt: {
 			host: "localhost",
 			port: 1883,
@@ -91,11 +91,15 @@ export class ConfigService {
 		}
 	};
 
+	public static getConfig() {
+		return this.getInstance().getConfig();
+	}
+
 	getConfig() {
 		return this.config;
 	}
 
-	setConfig(config: Config) {
+	setConfig(config: ConfigItem) {
 		this.config = config;
 	}
 
