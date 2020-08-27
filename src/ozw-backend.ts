@@ -10,6 +10,7 @@ import { Logger } from 'tslog';
 import { ConfigService } from './ConfigService';
 import { EINVAL } from 'constants';
 import { MQTTDriver, MqttDriverMessage } from './driver/MQTTDriver';
+import { HTTPDriver } from './driver/HTTPDriver';
 
 let logger: Logger = new Logger({name: "ozw-backend"});
 
@@ -31,6 +32,9 @@ logger.info("using config: ", config.getConfig());
 
 // setup mqtt driver
 let mqtt_driver: MQTTDriver = MQTTDriver.getInstance();
+
+// setup http driver
+let http_driver: HTTPDriver = HTTPDriver.getInstance();
 
 
 async function startup() {
@@ -59,11 +63,16 @@ async function startup() {
 		logger.debug(
 			`got message on topic ${msg.topic}, payload:`, msg.payload);
 	})
+
+	logger.info("start http driver");
+	http_driver.startup();
+
 }
 
 function shutdown() {
 	logger.info("shutting down...");
 	mqtt_driver.shutdown();
+	http_driver.shutdown();
 }
 
 async function sleep(ms: number) {

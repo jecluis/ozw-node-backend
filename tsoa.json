@@ -1,0 +1,12 @@
+{
+    "entryFile": "src/ozw-backend.ts",
+    "noImplicitAdditionalProperties": "throw-on-extras",
+    "controllerPathGlobs": ["src/api/*Controller.ts"],
+    "spec": {
+        "outputDirectory": "src/tsoa/",
+        "specVersion": 3
+    },
+    "routes": {
+        "routesDir": "src/tsoa/"
+    }
+}

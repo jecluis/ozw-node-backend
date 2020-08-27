@@ -1,0 +1,104 @@
+{
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"MQTTConfigItem": {
+				"properties": {
+					"host": {
+						"type": "string"
+					},
+					"port": {
+						"type": "number",
+						"format": "double"
+					},
+					"namespace": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"host",
+					"port",
+					"namespace"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"HTTPServerConfigItem": {
+				"properties": {
+					"host": {
+						"type": "string"
+					},
+					"port": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"host",
+					"port"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ConfigItem": {
+				"properties": {
+					"mqtt": {
+						"$ref": "#/components/schemas/MQTTConfigItem"
+					},
+					"server": {
+						"$ref": "#/components/schemas/HTTPServerConfigItem"
+					}
+				},
+				"required": [
+					"mqtt",
+					"server"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "ozw-backend",
+		"version": "1.0.0",
+		"description": "backend to interface with the ozw-mqtt-gateway, providing alternative protocols aside from mqtt",
+		"license": {
+			"name": "EUPL-1.2"
+		},
+		"contact": {
+			"name": "Joao Eduardo Luis"
+		}
+	},
+	"openapi": "3.0.0",
+	"paths": {
+		"/api/config": {
+			"get": {
+				"operationId": "Config",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ConfigItem"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}
