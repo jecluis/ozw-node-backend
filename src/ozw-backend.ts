@@ -6,7 +6,6 @@
  * under the terms of the EUROPEAN UNION PUBLIC LICENSE v1.2, as published by
  * the European Comission.
  */
-import mqtt, { MqttClient } from 'mqtt';
 import { Logger } from 'tslog';
 import { ConfigService } from './ConfigService';
 import { EINVAL } from 'constants';
