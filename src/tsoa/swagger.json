@@ -59,6 +59,67 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"NodeInfoItem": {
+				"properties": {
+					"manufacturer": {
+						"type": "string"
+					},
+					"manufacturerid": {
+						"type": "string"
+					},
+					"product": {
+						"type": "string"
+					},
+					"producttype": {
+						"type": "string"
+					},
+					"productid": {
+						"type": "string"
+					},
+					"type": {
+						"type": "string"
+					},
+					"name": {
+						"type": "string"
+					},
+					"loc": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"manufacturer",
+					"manufacturerid",
+					"product",
+					"producttype",
+					"productid",
+					"type",
+					"name",
+					"loc"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"NodeItem": {
+				"properties": {
+					"id": {
+						"type": "number",
+						"format": "double"
+					},
+					"info": {
+						"$ref": "#/components/schemas/NodeInfoItem"
+					},
+					"is_ready": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"id",
+					"info",
+					"is_ready"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -93,6 +154,57 @@
 				},
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/api/nodes": {
+			"get": {
+				"operationId": "GetNodes",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"items": {
+										"$ref": "#/components/schemas/NodeItem"
+									},
+									"type": "array"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/api/nodes/{nodeId}": {
+			"get": {
+				"operationId": "GetNode",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/NodeItem"
+								}
+							}
+						}
+					}
+				},
+				"security": [],
+				"parameters": [
+					{
+						"in": "path",
+						"name": "nodeId",
+						"required": true,
+						"schema": {
+							"format": "double",
+							"type": "number"
+						}
+					}
+				]
 			}
 		}
 	},
