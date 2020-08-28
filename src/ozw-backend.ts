@@ -11,6 +11,8 @@ import { ConfigService } from './ConfigService';
 import { EINVAL } from 'constants';
 import { MQTTDriver, MqttDriverMessage } from './driver/MQTTDriver';
 import { HTTPDriver } from './driver/HTTPDriver';
+import { NetworkService } from './network/NetworkService';
+
 
 let logger: Logger = new Logger({name: "ozw-backend"});
 
@@ -67,6 +69,17 @@ async function startup() {
 	logger.info("start http driver");
 	http_driver.startup();
 
+	/* inititate services
+	 *
+	 * these use the drivers internally, obtaining their singletons directly, so
+	 * we don't need to pass anything to them. They are singletons themselves;
+	 * we're just initiating them so that we are in control of when they are
+	 * properly instantiated, given one can't use a service without the drivers
+	 * being already setup.
+	 */
+	logger.info("create services");
+	// network service
+	NetworkService.init();
 }
 
 function shutdown() {
