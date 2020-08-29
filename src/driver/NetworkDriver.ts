@@ -14,6 +14,14 @@ import { Logger } from "tslog";
 
 let logger: Logger = new Logger({name: "network-driver"});
 
+
+export declare type MessagePayload = {[id: string]: any};
+
+export interface MessageData {
+	payload: MessagePayload;
+	timestamp: number;
+}
+
 /**
  * Network Driver
  * 
@@ -61,15 +69,31 @@ let logger: Logger = new Logger({name: "network-driver"});
 		let topic: string = msg.topic.substring(len);
 		logger.debug(`handle msg topic ${topic} on ns '${ns}'`);
 
+		let msg_payload = msg.payload;
+		if (!('payload' in msg_payload)) {
+			// malformed message. We expect a 'payload' entry to exist in the
+			// message's payload.
+			logger.warn(
+				`malformed message on topic ${msg.topic}: `, msg_payload);
+			return;
+		}
+
+		let payload = msg_payload['payload'];
+		let timestamp = msg_payload['timestamp'];
+		let msg_data: MessageData = {
+			payload: payload,
+			timestamp: timestamp
+		}
+
 		if (topic.startsWith("node/")) {
 			len = "node/".length;
 			topic = topic.substring(len);
-			this._on_node(topic, msg.payload);
+			this._on_node(topic, msg_data);
 
 		} else if (topic.startsWith("value/")) {
 			len = "value/".length;
 			topic = topic.substring(len);
-			this._on_value(topic, msg.payload);
+			this._on_value(topic, msg_data);
 
 		} else {
 			logger.warn(`unknown topic '${topic}`);
@@ -78,11 +102,11 @@ let logger: Logger = new Logger({name: "network-driver"});
 
 	protected abstract _on_node(
 		topic: string,
-		payload: {[id:string]: any}): void;
+		data: MessageData): void;
 
 	protected abstract _on_value(
 		topic: string,
-		payload: {[id:string]: any}): void;
+		data: MessageData): void;
 
 
 	// for now, and until we actually require something more convoluted, lets

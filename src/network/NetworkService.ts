@@ -10,13 +10,12 @@
 import { NodeItem, NodeInfoItem, NodeItemState } from "../types/Nodes";
 import { ValueItem } from "../types/Values";
 import { MQTTDriver, MqttDriverMessage } from "../driver/MQTTDriver";
-import { NetworkDriver } from "../driver/NetworkDriver";
+import { NetworkDriver, MessageData } from "../driver/NetworkDriver";
 import { Logger } from "tslog";
 
 
 let logger: Logger = new Logger({name: 'network-service'});
 
-declare type MessagePayload = {[id: string]: any};
 
 // XXX: for us to be able to provide more information, the required information,
 // the mqtt gateway needs to send out a few more events for each node,
@@ -60,37 +59,50 @@ declare type MessagePayload = {[id: string]: any};
 	private _values_per_class: {[id:number]: ValueItem} = {}
 	private _values_per_id: {[id:string]: ValueItem} = {}
 
-	protected _on_node(topic: string, payload: {[id: string]: any}) {
+	private _nodes_last_changed: {[id:number]: number} = {};
+	private _values_last_changed: {[id: string]: number} = {};
+
+	protected _on_node(topic: string, data: MessageData) {
 		logger.info(`network handle node message on topic '${topic}'`);
 
 		switch (topic.toLocaleLowerCase()) {
 
-			case "add": this._onNodeAdd(payload); break;
-			case "available": this._onNodeAvailable(payload); break;
-			case "ready": this._onNodeReady(payload); break;
-			case "remove": this._onNodeRemove(payload); break;
+			case "add": this._onNodeAdd(data); break;
+			case "available": this._onNodeAvailable(data); break;
+			case "ready": this._onNodeReady(data); break;
+			case "remove": this._onNodeRemove(data); break;
 			default:
 				logger.warn(`network handle unknown node state '${topic}'`);
 				break;
 		}
 	}
 
-	protected _on_value(topic: string, payload: MessagePayload) {
+	protected _on_value(topic: string, data: MessageData) {
 		logger.info(`network handle value message on topic '${topic}'`);
 	}
 
 
-	private _onNodeAdd(payload: MessagePayload) {
-		logger.debug(`network: add node id ${payload['id']}`)
-		let nodeid: number = payload['id'];
+	private _onNodeAdd(data: MessageData) {
+		logger.debug("nodeadd payload: ", data.payload);
+		logger.debug(`network: add node id ${data.payload['id']}`)
+		let nodeid: number = data.payload['id'];
 		if (nodeid <= 0) {
 			logger.warn(`unexpected node id: ${nodeid}`);
 			return;
 		}
 		if (nodeid in this._nodes) {
-			logger.debug(`node ${nodeid} already tracked; drop dup.`);
-			return;
+			logger.debug(`node ${nodeid} already tracked; check dup?`);
+			if (!(nodeid in this._nodes_last_changed)) {
+				throw Error("expected node's last change to have been tracked");
+			}
+			if (data.timestamp <= this._nodes_last_changed[nodeid]) {
+				logger.debug("dup! drop.");
+				return;
+			} else {
+				logger.debug("not a dup; must have restarted!");
+			}
 		}
+		let payload = data.payload;
 		let node: NodeItem = {
 			id: payload['id'],
 			info: {
@@ -119,17 +131,25 @@ declare type MessagePayload = {[id: string]: any};
 			last_seen: new Date().toISOString()
 		};
 		this._nodes[nodeid] = node;
+		this._nodes_last_changed[nodeid] = data.timestamp;
 	}
 
-	private _onNodeAvailable(payload: MessagePayload) {
-		let nodeid: number = payload['id'];
+	private _onNodeAvailable(data: MessageData) {
+		let nodeid: number = data.payload['id'];
+		if (!nodeid) {
+			logger.error("undefined nodeid??!");
+			logger.error("payload: ", data.payload);
+			throw new Error("undefined node id??");
+		}
 		logger.debug(`network: node ${nodeid} is available`);
-		if (!(nodeid in this._nodes)) {
+		if (!(nodeid in this._nodes) || 
+			(nodeid in this._nodes_last_changed &&
+			data.timestamp <= this._nodes_last_changed[nodeid])) {
 			// this might be a stray message; drop it.
 			logger.debug("dropping assumed stray");
 			return;
 		}
-		let info_data: {[id: string]: any} = payload['info'];
+		let info_data: {[id: string]: any} = data.payload['info'];
 		let info: NodeInfoItem = {
 			manufacturer: info_data['manufacturer'],
 			manufacturerid: info_data['manufacturerid'],
@@ -142,23 +162,29 @@ declare type MessagePayload = {[id: string]: any};
 		};
 		this._nodes[nodeid].info = info;
 		this._nodes[nodeid].last_seen = new Date().toISOString();
+		this._nodes_last_changed[nodeid] = data.timestamp;
 	}
 
-	private _onNodeReady(payload: MessagePayload) {
-		let nodeid: number = payload['id'];
+	private _onNodeReady(data: MessageData) {
+		let nodeid: number = data.payload['id'];
 		logger.debug(`network: node ${nodeid} is ready`);
-		if (!(nodeid in this._nodes)) {
+		if (!(nodeid in this._nodes) || 
+		    (nodeid in this._nodes_last_changed &&
+		     data.timestamp <= this._nodes_last_changed[nodeid])) {
 			logger.debug("dropping assumed stray");
 			return;
 		}
 		this._nodes[nodeid].ready = true;
 		this._nodes[nodeid].last_seen = new Date().toISOString();
+		
 	}
 
-	private _onNodeRemove(payload: MessagePayload) {
-		let nodeid: number = payload['id'];
+	private _onNodeRemove(data: MessageData) {
+		let nodeid: number = data.payload['id'];
 		logger.debug(`network: node ${nodeid} has been removed`);
-		if (!(nodeid in this._nodes)) {
+		if (!(nodeid in this._nodes) || 
+		    (nodeid in this._nodes_last_changed &&
+		     data.timestamp <= this._nodes_last_changed[nodeid])) {
 			// nothing to do.
 			return;
 		}
